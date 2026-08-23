@@ -1,0 +1,8 @@
+# Copy to .htaccess on shared hosting to password-protect the prep subdomain.
+# Generate password file first (SSH or panel terminal):
+#   htpasswd -c /home/YOUR_USER/.htpasswd-prep zia
+
+AuthType Basic
+AuthName "Prep Center"
+AuthUserFile /home/YOUR_USER/.htpasswd-prep
+Require valid-user
