@@ -16,10 +16,29 @@
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 <style>
-  body { background:#020617; font-family: ui-sans-serif, system-ui, "Noto Sans Bengali", sans-serif; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body { background:#020617; font-family: ui-sans-serif, system-ui, "Noto Sans Bengali", sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
   ::-webkit-scrollbar { width:8px; height:8px; }
   ::-webkit-scrollbar-thumb { background:#1e293b; border-radius:4px; }
   @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+  @media (max-width: 639px) {
+    #root { font-size: 15px; line-height: 1.55; }
+    #root .text-xs { font-size: 0.8125rem !important; line-height: 1.5; }
+    #root .text-sm { font-size: 0.9375rem !important; line-height: 1.55; }
+    #root .text-base { font-size: 1rem !important; }
+    #root .text-lg { font-size: 1.125rem !important; }
+    #root .text-2xl { font-size: 1.375rem !important; }
+    #root section.p-5, #root section.p-4 { padding: 1rem !important; }
+    #root .grid-cols-2 { grid-template-columns: 1fr !important; }
+    #root pre { font-size: 0.6875rem; line-height: 1.45; }
+    #root .ml-6 { margin-left: 0 !important; }
+    #root .w-24 { width: auto !important; }
+    #root input, #root textarea, #root select { font-size: 16px !important; }
+    #root nav button { min-height: 44px; padding-top: 0.625rem; padding-bottom: 0.625rem; }
+    #root main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important; }
+    #root .sticky.bottom-3 { bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)); z-index: 30; }
+    #root header .stat-row { width: 100%; flex-wrap: wrap; row-gap: 0.35rem; column-gap: 0.75rem; }
+  }
 </style>
 </head>
 <body>
@@ -328,13 +347,13 @@ const CLAIMS = [
 ];
 
 const RESUME_ROUTES = [
-  { file: "Ziaur_Rahman_Resume_PHP_Laravel.pdf", html: "resumes/html/Ziaur_Rahman_Resume_PHP_Laravel.html",
+  { file: "resumes/Ziaur_Rahman_Resume_PHP_Laravel.pdf", html: "resumes/html/Ziaur_Rahman_Resume_PHP_Laravel.html",
     when: "Laravel / Symfony / PHP / Vue roles",
     rule: "Default. 8-year depth. Also send the .docx if their form asks for Word. Do not send this to a React-only shop." },
-  { file: "Ziaur_Rahman_Resume_FullStack_JS.pdf", html: "resumes/html/Ziaur_Rahman_Resume_FullStack_JS.html",
+  { file: "resumes/Ziaur_Rahman_Resume_FullStack_JS.pdf", html: "resumes/html/Ziaur_Rahman_Resume_FullStack_JS.html",
     when: "React / Next / Vue / TypeScript / Node first in the JD",
     rule: "Honest: Vue is the deep frontend; React/Next is one production year. Do not send to a Laravel shop." },
-  { file: "Ziaur_Rahman_Master_Resume.pdf", html: "resumes/html/Ziaur_Rahman_Master_Resume.html",
+  { file: "resumes/Ziaur_Rahman_Master_Resume.pdf", html: "resumes/html/Ziaur_Rahman_Master_Resume.html",
     when: "Referrals, stack-agnostic senior, .NET + JS hybrids",
     rule: "Weaker than the targeted PDFs on a pure Laravel or pure React JD. Use when they asked for 'full-stack, any modern stack'." },
 ];
@@ -1785,16 +1804,16 @@ function App() {
     <div className="min-h-screen bg-slate-950 text-slate-200" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}>
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-900 sticky top-0 z-20">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-baseline gap-3">
-            <span className="font-mono text-2xl font-bold text-amber-400 tabular-nums">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+          <div className="flex items-baseline gap-2 sm:gap-3 min-w-0">
+            <span className="font-mono text-xl sm:text-2xl font-bold text-amber-400 tabular-nums">
               {String(dayNum).padStart(2, "0")}
             </span>
-            <span className="font-mono text-xs text-slate-500 uppercase tracking-widest">
+            <span className="font-mono text-[10px] sm:text-xs text-slate-500 uppercase tracking-wide sm:tracking-widest truncate">
               / {horizon} · {horizon - dayNum} left · {track.id === "sprint" ? "sprint" : "depth"}
             </span>
           </div>
-          <div className="flex gap-3 font-mono text-xs text-slate-400 tabular-nums overflow-x-auto">
+          <div className="stat-row flex gap-2 sm:gap-3 font-mono text-[10px] sm:text-xs text-slate-400 tabular-nums overflow-x-auto pb-0.5 sm:pb-0">
             <span><span className="text-emerald-400">{doneDays}</span> days</span>
             <span><span className="text-emerald-400">{claimsSolid}</span>/{CLAIMS.length} own</span>
             <span><span className="text-emerald-400">{lessonsRead}</span>/{LESSONS.length} read</span>
@@ -1803,14 +1822,14 @@ function App() {
             <span><span className="text-emerald-400">{appCount}</span> apps</span>
           </div>
         </div>
-        <nav className="max-w-5xl mx-auto px-2 flex gap-1 overflow-x-auto">
+        <nav className="max-w-5xl mx-auto px-1 sm:px-2 flex gap-0.5 sm:gap-1 overflow-x-auto scrollbar-thin pb-px">
           {TABS.map(t => {
             const Icon = t.icon;
             return (
               <button key={t.id} onClick={() => go(t.id, tab === t.id ? focus : null)}
-                className={`px-3 py-2 text-xs font-medium flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors ${
+                className={`px-2.5 sm:px-3 py-2.5 sm:py-2 text-xs sm:text-xs font-medium flex items-center gap-1 sm:gap-1.5 border-b-2 whitespace-nowrap transition-colors shrink-0 ${
                   tab === t.id ? "border-amber-400 text-amber-400" : "border-transparent text-slate-500 hover:text-slate-300"}`}>
-                <Icon className="w-3.5 h-3.5" />{t.label}
+                <Icon className="w-4 h-4 sm:w-3.5 sm:h-3.5" />{t.label}
               </button>
             );
           })}
@@ -1825,7 +1844,7 @@ function App() {
         </div>
       )}
 
-      <main className="max-w-5xl mx-auto px-4 py-5 pb-20">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-5 pb-24 sm:pb-20">
         {tab === "today" && <Today state={state} persist={persistCore} dayNum={dayNum} todayKey={todayKey}
           journal={journal} persistJournal={persistJournal} go={go} />}
         {tab === "plan" && <Plan state={state} persist={persistCore} dayNum={dayNum} go={go} />}
@@ -1884,16 +1903,16 @@ function Today({ state, persist, dayNum, todayKey, journal, persistJournal, go }
         <div className="space-y-3 text-sm">
           <Row label="Study" value={today.s} />
           <button onClick={() => go("code", { problemIdx: dsaPick })}
-            className="w-full flex gap-3 text-left hover:bg-slate-950/50 rounded px-1 py-1 -mx-1">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-600 w-24 shrink-0 pt-0.5">Build</span>
-            <span className="text-amber-200 flex-1">{today.b}</span>
-            <ChevronRight className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+            className="w-full flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 text-left hover:bg-slate-950/50 rounded px-1 py-2 -mx-1">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-600 sm:w-24 shrink-0 pt-0.5">Build</span>
+            <span className="text-amber-200 flex-1 leading-relaxed">{today.b}</span>
+            <ChevronRight className="hidden sm:block w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
           </button>
           <button onClick={() => go("chase")}
-            className="w-full flex gap-3 text-left hover:bg-slate-950/50 rounded px-1 py-1 -mx-1">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-600 w-24 shrink-0 pt-0.5">Job search</span>
-            <span className="text-slate-300 flex-1">{today.j}</span>
-            <span className="font-mono text-[10px] text-slate-500 shrink-0">{appsToday}/5 logged</span>
+            className="w-full flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 text-left hover:bg-slate-950/50 rounded px-1 py-2 -mx-1">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-600 sm:w-24 shrink-0 pt-0.5">Job search</span>
+            <span className="text-slate-300 flex-1 leading-relaxed">{today.j}</span>
+            <span className="font-mono text-[10px] text-slate-500 shrink-0 sm:pt-0.5">{appsToday}/5 logged</span>
           </button>
         </div>
       </section>
@@ -1931,7 +1950,7 @@ function Today({ state, persist, dayNum, todayKey, journal, persistJournal, go }
         </section>
       )}
 
-      <section className="grid grid-cols-2 gap-3">
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button onClick={() => go("mock", { live: "topic" })}
           className="bg-slate-900 border border-sky-900 hover:border-sky-600 rounded-lg p-4 text-left">
           <BookOpen className="w-4 h-4 text-sky-400 mb-2" />
@@ -1972,7 +1991,7 @@ function Today({ state, persist, dayNum, todayKey, journal, persistJournal, go }
         )}
       </section>
 
-      <section className="grid grid-cols-2 gap-3">
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button onClick={() => go("own")} className="bg-slate-900 border border-slate-800 hover:border-amber-700 rounded-lg p-4 text-left transition-colors">
           <Target className="w-4 h-4 text-amber-400 mb-2" />
           <div className="text-sm font-medium text-slate-200">Defend a resume claim</div>
@@ -2553,11 +2572,12 @@ function LiveChat({ apiKey, system, startUser, title, youLabel, botLabel, placeh
         <div ref={endRef} />
       </div>
 
-      <div className="sticky bottom-3 flex gap-2">
+      <div className="sticky bottom-3 flex flex-col sm:flex-row gap-2 bg-slate-950/95 sm:bg-transparent p-2 sm:p-0 -mx-2 sm:mx-0 rounded-t-lg sm:rounded-none border-t border-slate-800 sm:border-0">
         <textarea value={input} onChange={e => setInput(e.target.value)} rows={2}
           onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(); }}
           placeholder={convoOn && canHear ? "Or type here… conversation mode uses the mic" : placeholder}
-          className="flex-1 bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-600" />
+          className="flex-1 bg-slate-900 border border-slate-700 rounded px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-600 min-h-[3rem]" />
+        <div className="flex gap-2 shrink-0">
         <button type="button" onClick={toggleMic} disabled={busy || speaking || !canHear}
           title={canHear ? "Speak now" : "Voice input needs Chrome or Edge"}
           className={`px-3 rounded border transition-colors ${
@@ -2569,6 +2589,7 @@ function LiveChat({ apiKey, system, startUser, title, youLabel, botLabel, placeh
           className="px-4 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 rounded transition-colors">
           <Send className="w-4 h-4" />
         </button>
+        </div>
       </div>
       {!canHear && <p className="text-[11px] text-slate-600">Mic needs Chrome or Edge on desktop. Turn on AI voice to hear replies.</p>}
     </div>
