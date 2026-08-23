@@ -35,6 +35,8 @@ const Calendar = mk(<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="
 const Layers = mk(<><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></>);
 const Code2 = mk(<path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>);
 const Mic = mk(<><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1M12 18v4"/></>);
+const MicOff = mk(<><line x1="2" y1="2" x2="22" y2="22"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 11v-1M12 18v4"/></>);
+const Volume2 = mk(<><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></>);
 const ClipboardList = mk(<><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M9 12h6M9 16h6"/></>);
 const ScrollText = mk(<path d="M8 21h12a2 2 0 002-2v-2H10v2a2 2 0 11-4 0V5a2 2 0 10-4 0v3h4M19 17V5a2 2 0 00-2-2H4M15 8h-5M15 12h-5"/>);
 const Check = mk(<path d="M20 6L9 17l-5-5"/>);
@@ -1375,6 +1377,134 @@ const MOCK_MODES = [
   { id: "full", label: "Full loop (45 min)", desc: "Intro → technical → design → behavioral", cats: null },
 ];
 
+const GEMINI_MODELS = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash",
+];
+
+function speechRecognitionCtor() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function speakText(text, onDone) {
+  if (!window.speechSynthesis || !text) {
+    if (onDone) onDone();
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 1.02;
+    const voices = window.speechSynthesis.getVoices();
+    const en = voices.find(v => v.lang.startsWith("en") && /google|natural|premium/i.test(v.name))
+      || voices.find(v => v.lang.startsWith("en"));
+    if (en) u.voice = en;
+    const done = () => { if (onDone) onDone(); resolve(); };
+    u.onend = done;
+    u.onerror = done;
+    window.speechSynthesis.speak(u);
+    if (!window.speechSynthesis.speaking && window.speechSynthesis.pending) {
+      /* Chrome sometimes fires neither event — fallback */
+      setTimeout(done, Math.min(120000, text.length * 55));
+    }
+  });
+}
+
+function stopSpeaking() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+function toGeminiContents(messages) {
+  return messages.filter(m => m.content).map(m => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+}
+
+function extractGeminiText(data) {
+  const parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+  return parts.map(p => p.text || "").join("\n").trim();
+}
+
+function friendlyLlmError(status, message) {
+  if (status === 429 || /quota|rate limit/i.test(message || "")) {
+    return "Free quota hit. Wait a minute, or try again later today.";
+  }
+  if (status === 401 || status === 403 || /api key|rejected/i.test(message || "")) {
+    return "Gemini key rejected. Check Settings (or config.php on the host).";
+  }
+  return message || "The model did not respond. Check your connection and try again.";
+}
+
+async function askGeminiDirect(apiKey, system, messages) {
+  let last = "Gemini did not respond.";
+  for (const model of GEMINI_MODELS) {
+    const res = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(apiKey),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: system }] },
+          contents: toGeminiContents(messages),
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+        }),
+      }
+    );
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const text = extractGeminiText(data);
+      if (text) return text;
+    }
+    const msg = (data.error && data.error.message) || ("HTTP " + res.status);
+    last = friendlyLlmError(res.status, msg);
+    if (res.status === 429 || res.status === 401 || res.status === 403) throw new Error(last);
+    if (res.status === 404 || /not found|not supported/i.test(msg)) continue;
+    throw new Error(last);
+  }
+  throw new Error(last);
+}
+
+let proxyState = "unknown";
+
+async function askLlm({ system, messages, apiKey }) {
+  if (proxyState !== "no") {
+    try {
+      const res = await fetch("chat.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ system, messages }),
+      });
+      if (res.status !== 404) {
+        const data = await res.json().catch(() => ({}));
+        if (data.text) {
+          proxyState = "yes";
+          return data.text;
+        }
+        // 503 = proxy present but no server key — fall through to browser key
+        if (res.status !== 503 || !apiKey) {
+          throw new Error(friendlyLlmError(res.status, data.error));
+        }
+      }
+    } catch (e) {
+      if (proxyState === "yes" || !apiKey) throw e;
+    }
+    if (proxyState !== "yes") proxyState = "no";
+  }
+  if (!apiKey) {
+    throw new Error("Add a free Gemini key in Settings, or upload chat.php and config.php on the host.");
+  }
+  return askGeminiDirect(apiKey, system, messages);
+}
+
 const TRACKS = {
   sprint: { id: "sprint", label: "30-day sprint", horizon: 30, weeks: CURRICULUM_30 },
   depth: { id: "depth", label: "60-day depth", horizon: 60, weeks: CURRICULUM },
@@ -1431,7 +1561,11 @@ function App() {
         const r = await store.get("prep-journal");
         if (r?.value) jr = { ...jr, ...JSON.parse(r.value) };
       } catch (e) { /* first run */ }
-      try { setApiKey(localStorage.getItem("prep-apikey") || ""); } catch (e) {}
+      try {
+        const gemini = localStorage.getItem("prep-gemini-key") || "";
+        const legacy = localStorage.getItem("prep-apikey") || "";
+        setApiKey(gemini || (legacy.indexOf("AIza") === 0 ? legacy : ""));
+      } catch (e) {}
       setState(core); setJournal(jr);
     })();
   }, []);
@@ -1507,7 +1641,7 @@ function App() {
           {TABS.map(t => {
             const Icon = t.icon;
             return (
-              <button key={t.id} onClick={() => setTab(t.id)}
+              <button key={t.id} onClick={() => { setFocus(null); setTab(t.id); }}
                 className={`px-3 py-2 text-xs font-medium flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors ${
                   tab === t.id ? "border-amber-400 text-amber-400" : "border-transparent text-slate-500 hover:text-slate-300"}`}>
                 <Icon className="w-3.5 h-3.5" />{t.label}
@@ -1533,7 +1667,8 @@ function App() {
         {tab === "learn" && <Learn state={state} persist={persistCore} focus={focus} />}
         {tab === "drill" && <Drill state={state} persist={persistCore} focus={focus} />}
         {tab === "code" && <CodeLab state={state} persist={persistCore} />}
-        {tab === "mock" && <Mock apiKey={apiKey} setTab={setTab} state={state} persist={persistCore} />}
+        {tab === "mock" && <Mock apiKey={apiKey} setTab={setTab} state={state} persist={persistCore}
+          dayNum={dayNum} focus={focus} />}
         {tab === "chase" && <Chase go={go} />}
         {tab === "log" && <Log journal={journal} persist={persistJournal} state={state} persistCore={persistCore} />}
         {tab === "scripts" && <Scripts />}
@@ -1610,6 +1745,21 @@ function Today({ state, persist, dayNum, todayKey, journal, persistJournal, go }
           ))}
         </section>
       )}
+
+      <section className="grid grid-cols-2 gap-3">
+        <button onClick={() => go("mock", { live: "topic" })}
+          className="bg-slate-900 border border-sky-900 hover:border-sky-600 rounded-lg p-4 text-left">
+          <BookOpen className="w-4 h-4 text-sky-400 mb-2" />
+          <div className="text-sm font-medium text-slate-200">Discuss today's topic</div>
+          <div className="text-xs text-slate-500 mt-0.5">Coach until you can teach it</div>
+        </button>
+        <button onClick={() => go("mock", { live: "comms" })}
+          className="bg-slate-900 border border-slate-800 hover:border-amber-700 rounded-lg p-4 text-left">
+          <Mic className="w-4 h-4 text-amber-400 mb-2" />
+          <div className="text-sm font-medium text-slate-200">Speak an answer</div>
+          <div className="text-xs text-slate-500 mt-0.5">Structure, filler, clarity</div>
+        </button>
+      </section>
 
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-5">
         <div className="flex items-center justify-between mb-3">
@@ -1925,26 +2075,13 @@ function CodeLab({ state, persist }) {
 }
 
 /* ---------- MOCK ---------- */
-function Mock({ apiKey, setTab, state, persist }) {
-  const [engine, setEngine] = useState(null); // null | "offline" | "live"
-  const [mode, setMode] = useState(null);
-  const [msgs, setMsgs] = useState([]);
-  const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
-  const endRef = useRef(null);
-  const [offPool, setOffPool] = useState([]);
-  const [offI, setOffI] = useState(0);
-  const [offShown, setOffShown] = useState(false);
-  const [offMarks, setOffMarks] = useState([]);
-
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, busy]);
-
-  const systemFor = (m) => `You are a demanding but fair senior engineering interviewer at an international company hiring a senior full-stack engineer for a remote role. You are interviewing this candidate:
+function interviewerSystem(trackId) {
+  const label = (MOCK_MODES.find(x => x.id === trackId) || {}).label || "Full loop";
+  return `You are a demanding but fair senior engineering interviewer at an international company hiring a senior full-stack engineer for a remote role. You are interviewing this candidate:
 
 ${PROFILE}
 
-Interview focus: ${MOCK_MODES.find(x => x.id === m).label}.
+Interview focus: ${label}.
 
 Rules:
 - Ask ONE question at a time. Wait for the answer. Never ask multiple questions in one message.
@@ -1955,68 +2092,291 @@ Rules:
 - After roughly 8 exchanges, or whenever the candidate types "score me", stop the interview and give: a score out of 10, the two strongest answers, the two weakest, and three concrete things to drill before a real interview. Be honest — inflated scores are useless.
 
 Start now with your first question.`;
+}
+
+function topicSystem(state, dayNum) {
+  const today = dayMeta(state, dayNum);
+  const lessons = (today.lessons || []).map(id => LESSONS.find(l => l.id === id)).filter(Boolean);
+  const lessonBlock = lessons.length
+    ? lessons.map(l => "- " + l.t + (l.drill ? "\n  Drill: " + l.drill : "")).join("\n")
+    : "- " + today.s;
+  return `You are a senior coach helping this engineer own today's material well enough to teach it in an interview.
+
+${PROFILE}
+
+Today's study: ${today.s}
+Build (they should do this with AI off): ${today.b}
+Lessons:
+${lessonBlock}
+
+Rules:
+- Stay on today's topic. Do not wander into a general lecture.
+- Be Socratic. Ask one question at a time. Wait.
+- If they are vague, demand a concrete example from CoreBari, the AI recruitment platform, L2N, or DevVoyage.
+- Correct mistakes briefly, then make them restate the idea in their own words.
+- After they can explain the idea cleanly, give one interview-shaped follow-up.
+- Keep replies short: 3–6 sentences. No essays.
+- If they type "score me", say what they now own, what is still fuzzy, and the one drill for tomorrow.
+
+Start by asking what they think today's topic is actually testing in an interview.`;
+}
+
+function commsSystem() {
+  return `You are a communication coach for a senior engineer interviewing in English as a second language for remote roles.
+
+${PROFILE}
+
+The goal is not native-speaker theater. The goal is answers a hiring manager can follow on a bad Zoom call.
+
+For every answer they give:
+1. Score 1–5 on: structure (STAR when it is a story), specificity (names of systems, not "we"), filler/ramble, and whether a remote interviewer would follow it.
+2. Name the single weakest move.
+3. Rewrite the answer in THEIR voice — short, concrete, first person. Do not make it posh.
+4. Tell them to say the rewrite out loud once.
+
+Rules:
+- One answer at a time. Do not pile on three rewrites.
+- If they ramble, cut. If they are too short, ask for the missing fact.
+- Prefer 45–90 seconds spoken. Flag anything that would run past two minutes.
+- If they type "score me", give the pattern you heard across the session and the one habit to break.
+
+Start by asking them to answer, out loud: "Tell me about yourself" in 90 seconds.`;
+}
+
+function LiveChat({ apiKey, system, startUser, title, youLabel, botLabel, placeholder, onEnd }) {
+  const [msgs, setMsgs] = useState([]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [speakOn, setSpeakOn] = useState(() => {
+    try { return localStorage.getItem("prep-speak-replies") !== "0"; } catch (e) { return true; }
+  });
+  const [convoOn, setConvoOn] = useState(() => {
+    try { return localStorage.getItem("prep-conversation") !== "0"; } catch (e) { return true; }
+  });
+  const endRef = useRef(null);
+  const recRef = useRef(null);
+  const busyRef = useRef(false);
+  const speakOnRef = useRef(speakOn);
+  const convoOnRef = useRef(convoOn);
+  const canHear = !!speechRecognitionCtor();
+
+  useEffect(() => { speakOnRef.current = speakOn; }, [speakOn]);
+  useEffect(() => { convoOnRef.current = convoOn; }, [convoOn]);
+  useEffect(() => { busyRef.current = busy; }, [busy]);
+  useEffect(() => { endRef.current && endRef.current.scrollIntoView({ behavior: "smooth" }); }, [msgs, busy, speaking]);
+  useEffect(() => () => { stopSpeaking(); if (recRef.current) recRef.current.stop(); }, []);
+
+  const toggleSpeak = () => {
+    const next = !speakOn;
+    setSpeakOn(next);
+    speakOnRef.current = next;
+    try { localStorage.setItem("prep-speak-replies", next ? "1" : "0"); } catch (e) {}
+    if (!next) stopSpeaking();
+  };
+
+  const toggleConvo = () => {
+    const next = !convoOn;
+    setConvoOn(next);
+    convoOnRef.current = next;
+    try { localStorage.setItem("prep-conversation", next ? "1" : "0"); } catch (e) {}
+  };
+
+  const startListening = () => {
+    if (!convoOnRef.current || !canHear || busyRef.current || listening) return;
+    const Ctor = speechRecognitionCtor();
+    if (!Ctor) return;
+    if (recRef.current) {
+      try { recRef.current.stop(); } catch (e) {}
+    }
+    const rec = new Ctor();
+    rec.lang = "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.onresult = (e) => {
+      let said = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) said += e.results[i][0].transcript;
+      }
+      if (said.trim()) {
+        setInput(said.trim());
+        submit(said.trim());
+      }
+    };
+    rec.onerror = (ev) => {
+      setListening(false);
+      if (ev.error === "not-allowed") {
+        setErr("Mic blocked. Allow microphone for this site in Chrome settings.");
+      }
+    };
+    rec.onend = () => { setListening(false); recRef.current = null; };
+    recRef.current = rec;
+    setListening(true);
+    setErr("");
+    try { rec.start(); } catch (e) { setListening(false); }
+  };
+
+  const playReply = async (reply) => {
+    if (!speakOnRef.current || !reply) {
+      if (convoOnRef.current && canHear) startListening();
+      return;
+    }
+    setSpeaking(true);
+    await speakText(reply);
+    setSpeaking(false);
+    if (convoOnRef.current && canHear && !busyRef.current) startListening();
+  };
+
+  const pushReply = (history, userText, reply) => {
+    setMsgs([...history, ...(userText ? [{ role: "user", content: userText }] : []), { role: "assistant", content: reply }]);
+    playReply(reply);
+  };
 
   const send = async (text, existing) => {
+    const history = existing || msgs;
+    const outgoing = [...history, ...(text ? [{ role: "user", content: text }] : [])];
     setBusy(true); setErr("");
-    const history = existing ?? msgs;
+    if (recRef.current) {
+      try { recRef.current.stop(); } catch (e) {}
+      setListening(false);
+    }
+    stopSpeaking();
+    setSpeaking(false);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1000,
-          system: systemFor(mode),
-          messages: [...history, ...(text ? [{ role: "user", content: text }] : [])],
-        }),
-      });
-      const data = await res.json();
-      const reply = (data.content || []).map(c => c.type === "text" ? c.text : "").join("\n").trim();
+      const reply = await askLlm({ system, messages: outgoing, apiKey });
       if (!reply) throw new Error("empty");
-      setMsgs([...history, ...(text ? [{ role: "user", content: text }] : []), { role: "assistant", content: reply }]);
+      pushReply(history, text, reply);
     } catch (e) {
-      setErr("The interviewer didn't respond. Check your connection and send again.");
+      setErr(e.message || "The model did not respond.");
     } finally { setBusy(false); }
   };
 
-  const start = async (m) => {
-    setEngine("live");
-    setMode(m); setMsgs([]); setErr("");
-    setBusy(true);
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6", max_tokens: 1000,
-          system: systemFor(m),
-          messages: [{ role: "user", content: "I'm ready to begin the interview." }],
-        }),
-      });
-      const data = await res.json();
-      const reply = (data.content || []).map(c => c.type === "text" ? c.text : "").join("\n").trim();
-      setMsgs([{ role: "user", content: "I'm ready to begin the interview." }, { role: "assistant", content: reply }]);
-    } catch (e) {
-      setErr("Couldn't start the interview. Check your connection and try again.");
-    } finally { setBusy(false); }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setBusy(true); setErr("");
+      try {
+        const seed = [{ role: "user", content: startUser }];
+        const reply = await askLlm({ system, messages: seed, apiKey });
+        if (cancelled) return;
+        setMsgs([...seed, { role: "assistant", content: reply }]);
+        await playReply(reply);
+      } catch (e) {
+        if (!cancelled) setErr(e.message || "Couldn't start. Check Settings and try again.");
+      } finally { if (!cancelled) setBusy(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
-  const submit = () => {
-    const t = input.trim();
+  const submit = (override) => {
+    const t = (override !== undefined ? override : input).trim();
     if (!t || busy) return;
     setInput("");
     send(t);
   };
+
+  const toggleMic = () => {
+    if (listening && recRef.current) {
+      recRef.current.stop();
+      return;
+    }
+    startListening();
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-amber-400">{title}</span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button onClick={toggleConvo} disabled={!canHear}
+            className={`text-xs flex items-center gap-1 ${convoOn ? "text-emerald-400" : "text-slate-500 hover:text-slate-300"} disabled:text-slate-700`}>
+            <Mic className="w-3.5 h-3.5" /> {convoOn ? "Conversation on" : "Conversation off"}
+          </button>
+          <button onClick={toggleSpeak} className={`text-xs flex items-center gap-1 ${speakOn ? "text-amber-400" : "text-slate-500 hover:text-slate-300"}`}>
+            <Volume2 className="w-3.5 h-3.5" /> {speakOn ? "AI voice on" : "AI voice off"}
+          </button>
+          <button onClick={onEnd} className="text-xs text-slate-500 hover:text-slate-300">End</button>
+        </div>
+      </div>
+
+      {(convoOn && canHear) && (
+        <div className="text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded px-3 py-2 leading-relaxed">
+          Conversation mode: the AI speaks, then your mic opens. Answer out loud — it sends when you pause.
+          Chrome will ask for mic permission once.
+        </div>
+      )}
+
+      {(speaking || listening || busy) && (
+        <div className="font-mono text-[10px] uppercase tracking-widest text-center py-1">
+          {busy ? <span className="text-slate-500">Thinking…</span>
+               : speaking ? <span className="text-amber-400">AI speaking…</span>
+               : <span className="text-emerald-400">Listening — speak now</span>}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {msgs.filter(m => m.role === "assistant" || (m.role === "user" && m.content !== startUser)).map((m, i) => (
+          <div key={i} className={`rounded-lg p-3.5 text-sm leading-relaxed ${
+            m.role === "assistant"
+              ? "bg-slate-900 border border-slate-800 text-slate-200"
+              : "bg-slate-800 border border-slate-700 text-slate-300 ml-6"}`}>
+            <div className="font-mono text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">
+              {m.role === "assistant" ? botLabel : youLabel}
+            </div>
+            <div className="whitespace-pre-wrap">{m.content}</div>
+          </div>
+        ))}
+        {busy && (
+          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3.5 flex items-center gap-2 text-sm text-slate-500">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Thinking…
+          </div>
+        )}
+        {err && (
+          <div className="text-xs text-rose-300 bg-rose-950 border border-rose-900 rounded px-3 py-2">{err}</div>
+        )}
+        <div ref={endRef} />
+      </div>
+
+      <div className="sticky bottom-3 flex gap-2">
+        <textarea value={input} onChange={e => setInput(e.target.value)} rows={2}
+          onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(); }}
+          placeholder={convoOn && canHear ? "Or type here… conversation mode uses the mic" : placeholder}
+          className="flex-1 bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-600" />
+        <button type="button" onClick={toggleMic} disabled={busy || speaking || !canHear}
+          title={canHear ? "Speak now" : "Voice input needs Chrome or Edge"}
+          className={`px-3 rounded border transition-colors ${
+            listening ? "bg-emerald-900 border-emerald-600 text-emerald-100 animate-pulse"
+                      : "bg-slate-900 border-slate-700 text-slate-200 hover:border-amber-600 disabled:text-slate-600"}`}>
+          {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+        </button>
+        <button onClick={() => submit()} disabled={busy || !input.trim()}
+          className="px-4 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 rounded transition-colors">
+          <Send className="w-4 h-4" />
+        </button>
+      </div>
+      {!canHear && <p className="text-[11px] text-slate-600">Mic needs Chrome or Edge on desktop. Turn on AI voice to hear replies.</p>}
+    </div>
+  );
+}
+
+function Mock({ apiKey, setTab, state, persist, dayNum, focus }) {
+  const [engine, setEngine] = useState(() => {
+    if (!focus) return null;
+    if (focus.live === "topic") return "topic";
+    if (focus.live === "comms") return "comms";
+    if (focus.live === "interview") return "pick-live";
+    return null;
+  });
+  const [mode, setMode] = useState(null);
+  const [offPool, setOffPool] = useState([]);
+  const [offI, setOffI] = useState(0);
+  const [offShown, setOffShown] = useState(false);
+  const [offMarks, setOffMarks] = useState([]);
+  const hasLive = !!apiKey || proxyState === "yes" || proxyState === "unknown";
+
+  const needKey = () => setTab("settings");
 
   const startOffline = (m) => {
     const spec = MOCK_MODES.find(x => x.id === m);
@@ -2036,14 +2396,47 @@ Start now with your first question.`;
     setOffI(offI + 1);
   };
 
+  const reset = () => { setEngine(null); setMode(null); };
+
+  if (engine === "topic") {
+    return (
+      <LiveChat apiKey={apiKey} system={topicSystem(state, dayNum)}
+        startUser="Let's work today's topic until I can teach it."
+        title={"Topic coach · Day " + dayNum} youLabel="You" botLabel="Coach"
+        placeholder="Explain it in your words… (Ctrl+Enter)"
+        onEnd={reset} />
+    );
+  }
+
+  if (engine === "comms") {
+    return (
+      <LiveChat apiKey={apiKey} system={commsSystem()}
+        startUser="I want to tighten how I speak in interviews."
+        title="Communication coach" youLabel="You" botLabel="Coach"
+        placeholder="Type, or tap the mic and answer aloud…"
+        onEnd={reset} />
+    );
+  }
+
+  if (engine === "live" && mode) {
+    return (
+      <LiveChat apiKey={apiKey} system={interviewerSystem(mode)}
+        startUser="I'm ready to begin the interview."
+        title={MOCK_MODES.find(m => m.id === mode).label}
+        youLabel="You" botLabel="Interviewer"
+        placeholder={'Your answer… (or type "score me")'}
+        onEnd={reset} />
+    );
+  }
+
   if (!engine) {
     return (
       <div className="space-y-3">
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-          <h2 className="text-sm font-semibold text-slate-100 mb-1">Mock interview</h2>
+          <h2 className="text-sm font-semibold text-slate-100 mb-1">Mock · coach · voice</h2>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Offline grill uses the question bank — no key, no network. Live interviewer needs an Anthropic key and pushes back on vague answers.
-            Answer out loud first.
+            Offline grill needs no key. Live modes use Gemini (free) with conversation mode: AI speaks, mic opens, you answer out loud.
+            Chrome desktop — allow mic when asked.
           </p>
         </div>
         <button onClick={() => setEngine("pick-offline")}
@@ -2051,10 +2444,20 @@ Start now with your first question.`;
           <div className="text-sm font-medium text-slate-200">Self-grill (offline)</div>
           <div className="text-xs text-slate-500 mt-0.5">8 questions, reveal, mark. Daily default.</div>
         </button>
-        <button onClick={() => apiKey ? setEngine("pick-live") : setTab("settings")}
+        <button onClick={() => hasLive ? setEngine("pick-live") : needKey()}
           className="w-full bg-slate-900 border border-slate-800 hover:border-amber-700 rounded-lg p-4 text-left">
-          <div className="text-sm font-medium text-slate-200">Live interviewer {apiKey ? "" : "(needs API key)"}</div>
+          <div className="text-sm font-medium text-slate-200">Live interviewer {hasLive ? "" : "(needs Gemini key)"}</div>
           <div className="text-xs text-slate-500 mt-0.5">Knows your systems. Type "score me" when done.</div>
+        </button>
+        <button onClick={() => hasLive ? setEngine("topic") : needKey()}
+          className="w-full bg-slate-900 border border-sky-900 hover:border-sky-600 rounded-lg p-4 text-left">
+          <div className="text-sm font-medium text-slate-200">Topic coach</div>
+          <div className="text-xs text-slate-500 mt-0.5">Today's study, until you can teach it.</div>
+        </button>
+        <button onClick={() => hasLive ? setEngine("comms") : needKey()}
+          className="w-full bg-slate-900 border border-slate-800 hover:border-amber-700 rounded-lg p-4 text-left">
+          <div className="text-sm font-medium text-slate-200">Communication coach</div>
+          <div className="text-xs text-slate-500 mt-0.5">STAR, filler, 90-second answers. Use the mic.</div>
         </button>
       </div>
     );
@@ -2066,7 +2469,7 @@ Start now with your first question.`;
       <div className="space-y-3">
         <button onClick={() => setEngine(null)} className="text-xs text-slate-500 hover:text-slate-300">← Back</button>
         {MOCK_MODES.map(m => (
-          <button key={m.id} onClick={() => live ? start(m.id) : startOffline(m.id)}
+          <button key={m.id} onClick={() => { if (live) { setMode(m.id); setEngine("live"); } else startOffline(m.id); }}
             className="w-full bg-slate-900 border border-slate-800 hover:border-amber-700 rounded-lg p-4 text-left transition-colors">
             <div className="text-sm font-medium text-slate-200">{m.label}</div>
             <div className="text-xs text-slate-500 mt-0.5">{m.desc}</div>
@@ -2087,8 +2490,7 @@ Start now with your first question.`;
           <p className="text-xs text-slate-400">
             {got >= 6 ? "Solid. Redo the fumbles tomorrow." : "Not interview-ready on this track. Those red cards are tomorrow's only drill."}
           </p>
-          <button onClick={() => { setEngine(null); setMode(null); }}
-            className="px-4 py-2 bg-amber-500 text-slate-950 text-sm font-medium rounded">Done</button>
+          <button onClick={reset} className="px-4 py-2 bg-amber-500 text-slate-950 text-sm font-medium rounded">Done</button>
         </div>
       );
     }
@@ -2098,7 +2500,7 @@ Start now with your first question.`;
           <span className="font-mono text-[10px] uppercase tracking-widest text-amber-400">
             Offline · {MOCK_MODES.find(m => m.id === mode).label}
           </span>
-          <button onClick={() => { setEngine(null); setMode(null); }} className="text-xs text-slate-500">End</button>
+          <button onClick={reset} className="text-xs text-slate-500">End</button>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-5">
           <div className="font-mono text-[10px] text-slate-600 mb-2">{offI + 1}/{offPool.length} · {q.c}</div>
@@ -2122,52 +2524,7 @@ Start now with your first question.`;
     );
   }
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-amber-400">
-          {MOCK_MODES.find(m => m.id === mode).label}
-        </span>
-        <button onClick={() => { setEngine(null); setMode(null); setMsgs([]); }} className="text-xs text-slate-500 hover:text-slate-300">
-          End interview
-        </button>
-      </div>
-
-      <div className="space-y-3">
-        {msgs.slice(1).map((m, i) => (
-          <div key={i} className={`rounded-lg p-3.5 text-sm leading-relaxed ${
-            m.role === "assistant"
-              ? "bg-slate-900 border border-slate-800 text-slate-200"
-              : "bg-slate-800 border border-slate-700 text-slate-300 ml-6"}`}>
-            <div className="font-mono text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">
-              {m.role === "assistant" ? "Interviewer" : "You"}
-            </div>
-            <div className="whitespace-pre-wrap">{m.content}</div>
-          </div>
-        ))}
-        {busy && (
-          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3.5 flex items-center gap-2 text-sm text-slate-500">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Thinking…
-          </div>
-        )}
-        {err && (
-          <div className="text-xs text-rose-300 bg-rose-950 border border-rose-900 rounded px-3 py-2">{err}</div>
-        )}
-        <div ref={endRef} />
-      </div>
-
-      <div className="sticky bottom-3 flex gap-2">
-        <textarea value={input} onChange={e => setInput(e.target.value)} rows={2}
-          onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(); }}
-          placeholder='Your answer… (or type "score me")'
-          className="flex-1 bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-600" />
-        <button onClick={submit} disabled={busy || !input.trim()}
-          className="px-4 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 rounded transition-colors">
-          <Send className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
+  return null;
 }
 
 /* ---------- LOG ---------- */
@@ -2666,7 +3023,7 @@ function SettingsView({ apiKey, setApiKey, state, journal, persistCore, persistJ
 
   const save = () => {
     const v = draft.trim();
-    localStorage.setItem("prep-apikey", v);
+    localStorage.setItem("prep-gemini-key", v);
     setApiKey(v);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -2718,19 +3075,20 @@ function SettingsView({ apiKey, setApiKey, state, journal, persistCore, persistJ
       </section>
 
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-slate-100 mb-2">Anthropic API key</h3>
+        <h3 className="text-sm font-semibold text-slate-100 mb-2">Gemini API key (free)</h3>
         <p className="text-xs text-slate-400 leading-relaxed mb-3">
-          Needed only for mock interviews. Get one at console.anthropic.com and add a few dollars of credit —
-          each mock costs cents. The key is stored in this browser only.
+          For live interviewer, topic coach, and communication coach. Get a free key at
+          aistudio.google.com/apikey — Flash-Lite is enough for a few mocks a day.
+          On shared hosting, put the key in config.php instead and upload chat.php so the key never sits in the browser.
         </p>
         <div className="flex gap-2">
-          <input type="password" value={draft} onChange={e => setDraft(e.target.value)} placeholder="sk-ant-..."
+          <input type="password" value={draft} onChange={e => setDraft(e.target.value)} placeholder="AIza..."
             className="flex-1 bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-700" />
           <button onClick={save} className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-medium rounded transition-colors">
             {saved ? "Saved" : "Save"}
           </button>
         </div>
-        <p className="text-xs text-slate-600 mt-2">Host this file privately. Anyone using this device can use the saved key.</p>
+        <p className="text-xs text-slate-600 mt-2">Stored in this browser only. Password-protect the subdomain.</p>
       </section>
 
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-5">
