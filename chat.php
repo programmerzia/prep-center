@@ -23,7 +23,7 @@ if (!is_array($config)) {
     $config = [];
 }
 
-$geminiKey = trim((string) ($config['gemini_key'] ?? ''));
+$geminiKeys = collectGeminiKeys($config);
 $groqKey = trim((string) ($config['groq_key'] ?? ''));
 $models = $config['gemini_models'] ?? [
     'gemini-3.5-flash-lite',
@@ -33,9 +33,9 @@ $models = $config['gemini_models'] ?? [
 ];
 $groqModel = (string) ($config['groq_model'] ?? 'llama-3.3-70b-versatile');
 
-if ($geminiKey === '' && $groqKey === '') {
+if ($geminiKeys === [] && $groqKey === '') {
     http_response_code(503);
-    echo json_encode(['error' => 'Server has no API key. Copy config.example.php to config.php and add a Gemini key.']);
+    echo json_encode(['error' => 'Server has no API key. Copy config.example.php to config.php and add Gemini key(s).']);
     exit;
 }
 
@@ -72,10 +72,16 @@ foreach ($messages as $i => $msg) {
     $messages[$i] = ['role' => $role, 'content' => $content];
 }
 
-if ($geminiKey !== '') {
-    $gemini = askGemini($geminiKey, $models, $system, $messages);
+if ($geminiKeys !== []) {
+    $startIdx = readKeyIndex(count($geminiKeys));
+    $gemini = askGeminiRotating($geminiKeys, $startIdx, $models, $system, $messages);
     if ($gemini['text'] !== '') {
-        echo json_encode(['text' => $gemini['text'], 'provider' => 'gemini']);
+        writeKeyIndex($gemini['index']);
+        $out = ['text' => $gemini['text'], 'provider' => 'gemini'];
+        if ($gemini['rotated']) {
+            $out['rotated'] = true;
+        }
+        echo json_encode($out);
         exit;
     }
     if ($groqKey === '') {
@@ -93,6 +99,78 @@ if ($groq['text'] !== '') {
 
 http_response_code($groq['status'] >= 400 ? $groq['status'] : 502);
 echo json_encode(['error' => $groq['error']]);
+
+function collectGeminiKeys(array $config): array
+{
+    $keys = [];
+    if (!empty($config['gemini_keys']) && is_array($config['gemini_keys'])) {
+        foreach ($config['gemini_keys'] as $k) {
+            $k = trim((string) $k);
+            if ($k !== '' && !in_array($k, $keys, true)) {
+                $keys[] = $k;
+            }
+        }
+    }
+    $single = trim((string) ($config['gemini_key'] ?? ''));
+    if ($single !== '' && !in_array($single, $keys, true)) {
+        $keys[] = $single;
+    }
+
+    return $keys;
+}
+
+function keyIndexPath(): string
+{
+    return __DIR__ . '/.gemini-key-idx';
+}
+
+function readKeyIndex(int $count): int
+{
+    if ($count <= 0) {
+        return 0;
+    }
+    $path = keyIndexPath();
+    if (!is_file($path)) {
+        return 0;
+    }
+    $idx = (int) trim((string) file_get_contents($path));
+
+    return (($idx % $count) + $count) % $count;
+}
+
+function writeKeyIndex(int $index): void
+{
+    @file_put_contents(keyIndexPath(), (string) $index);
+}
+
+function askGeminiRotating(array $keys, int $startIdx, array $models, string $system, array $messages): array
+{
+    $n = count($keys);
+    $last = ['text' => '', 'error' => 'All Gemini keys exhausted.', 'status' => 429, 'index' => $startIdx, 'rotated' => false];
+    $triedRotate = false;
+
+    for ($i = 0; $i < $n; $i++) {
+        $idx = ($startIdx + $i) % $n;
+        $result = askGemini($keys[$idx], $models, $system, $messages);
+        if ($result['text'] !== '') {
+            return ['text' => $result['text'], 'error' => '', 'status' => 200, 'index' => $idx, 'rotated' => $triedRotate];
+        }
+        if (!empty($result['rotate'])) {
+            $triedRotate = true;
+            continue;
+        }
+        $last = ['text' => '', 'error' => $result['error'], 'status' => $result['status'], 'index' => $idx, 'rotated' => $triedRotate];
+        if (!in_array($result['status'], [401, 403], true)) {
+            return $last;
+        }
+    }
+
+    $last['error'] = $triedRotate
+        ? 'All Gemini keys hit the free limit. Wait and try again, or add another key.'
+        : $last['error'];
+
+    return $last;
+}
 
 function askGemini(string $key, array $models, string $system, array $messages): array
 {
@@ -113,7 +191,8 @@ function askGemini(string $key, array $models, string $system, array $messages):
         ],
     ], JSON_UNESCAPED_UNICODE);
 
-    $last = ['text' => '', 'error' => 'Gemini did not respond', 'status' => 502];
+    $last = ['text' => '', 'error' => 'Gemini did not respond', 'status' => 502, 'rotate' => false];
+    $sawRateLimit = false;
 
     foreach ($models as $model) {
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
@@ -123,14 +202,25 @@ function askGemini(string $key, array $models, string $system, array $messages):
         $result = httpJson('POST', $url, $payload, ['Content-Type: application/json']);
         $text = geminiText($result['json']);
         if ($text !== '') {
-            return ['text' => $text, 'error' => '', 'status' => 200];
+            return ['text' => $text, 'error' => '', 'status' => 200, 'rotate' => false];
         }
 
         $err = geminiError($result);
-        $last = ['text' => '', 'error' => $err, 'status' => $result['status']];
-        if (in_array($result['status'], [401, 403, 429], true)) {
+        $last = ['text' => '', 'error' => $err, 'status' => $result['status'], 'rotate' => false];
+        if ($result['status'] === 429) {
+            $sawRateLimit = true;
+            continue;
+        }
+        if (in_array($result['status'], [401, 403], true)) {
+            $last['rotate'] = true;
             return $last;
         }
+    }
+
+    if ($sawRateLimit) {
+        $last['rotate'] = true;
+        $last['status'] = 429;
+        $last['error'] = 'Free quota hit on this key — trying next key.';
     }
 
     return $last;

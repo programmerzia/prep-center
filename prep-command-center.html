@@ -1444,7 +1444,82 @@ function friendlyLlmError(status, message) {
   return message || "The model did not respond. Check your connection and try again.";
 }
 
-async function askGeminiDirect(apiKey, system, messages) {
+function parseGeminiKeys(raw) {
+  if (!raw) return [];
+  const seen = new Set();
+  const keys = [];
+  String(raw).split(/[\n,]+/).forEach(part => {
+    const k = part.trim();
+    if (k && k.startsWith("AIza") && !seen.has(k)) {
+      seen.add(k);
+      keys.push(k);
+    }
+  });
+  return keys;
+}
+
+function loadGeminiKeysRaw() {
+  try {
+    return localStorage.getItem("prep-gemini-keys")
+      || localStorage.getItem("prep-gemini-key")
+      || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function saveGeminiKeysRaw(raw) {
+  try {
+    localStorage.setItem("prep-gemini-keys", raw);
+    localStorage.removeItem("prep-gemini-key");
+  } catch (e) {}
+}
+
+function readKeyIndex(count) {
+  if (count <= 0) return 0;
+  try {
+    const idx = parseInt(localStorage.getItem("prep-gemini-key-idx") || "0", 10);
+    return ((idx % count) + count) % count;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function writeKeyIndex(index) {
+  try { localStorage.setItem("prep-gemini-key-idx", String(index)); } catch (e) {}
+}
+
+async function askGeminiDirect(apiKeys, system, messages) {
+  const keys = Array.isArray(apiKeys) ? apiKeys : parseGeminiKeys(apiKeys);
+  if (!keys.length) throw new Error("No Gemini keys configured.");
+
+  const start = readKeyIndex(keys.length);
+  let last = "Gemini did not respond.";
+  let rotated = false;
+
+  for (let i = 0; i < keys.length; i++) {
+    const idx = (start + i) % keys.length;
+    const key = keys[idx];
+    try {
+      const text = await askGeminiOneKey(key, system, messages);
+      writeKeyIndex(idx);
+      return text;
+    } catch (e) {
+      last = e.message || last;
+      if (/quota|rate limit|429|rejected|401|403/i.test(last)) {
+        rotated = true;
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  throw new Error(rotated
+    ? "All Gemini keys hit the free limit. Wait and try again, or add another key in Settings."
+    : last);
+}
+
+async function askGeminiOneKey(apiKey, system, messages) {
   let last = "Gemini did not respond.";
   for (const model of GEMINI_MODELS) {
     const res = await fetch(
@@ -1466,10 +1541,12 @@ async function askGeminiDirect(apiKey, system, messages) {
     }
     const msg = (data.error && data.error.message) || ("HTTP " + res.status);
     last = friendlyLlmError(res.status, msg);
-    if (res.status === 429 || res.status === 401 || res.status === 403) throw new Error(last);
+    if (res.status === 429) continue;
+    if (res.status === 401 || res.status === 403) throw new Error(last);
     if (res.status === 404 || /not found|not supported/i.test(msg)) continue;
     throw new Error(last);
   }
+  if (/quota|rate limit|429/i.test(last)) throw new Error(last);
   throw new Error(last);
 }
 
@@ -1490,17 +1567,17 @@ async function askLlm({ system, messages, apiKey }) {
           return data.text;
         }
         // 503 = proxy present but no server key — fall through to browser key
-        if (res.status !== 503 || !apiKey) {
+        if (res.status !== 503 || !parseGeminiKeys(apiKey).length) {
           throw new Error(friendlyLlmError(res.status, data.error));
         }
       }
     } catch (e) {
-      if (proxyState === "yes" || !apiKey) throw e;
+      if (proxyState === "yes" || !parseGeminiKeys(apiKey).length) throw e;
     }
     if (proxyState !== "yes") proxyState = "no";
   }
-  if (!apiKey) {
-    throw new Error("Add a free Gemini key in Settings, or upload chat.php and config.php on the host.");
+  if (!apiKey || !parseGeminiKeys(apiKey).length) {
+    throw new Error("Add one or more free Gemini keys in Settings, or upload chat.php and config.php on the host.");
   }
   return askGeminiDirect(apiKey, system, messages);
 }
@@ -1562,9 +1639,9 @@ function App() {
         if (r?.value) jr = { ...jr, ...JSON.parse(r.value) };
       } catch (e) { /* first run */ }
       try {
-        const gemini = localStorage.getItem("prep-gemini-key") || "";
+        const raw = loadGeminiKeysRaw();
         const legacy = localStorage.getItem("prep-apikey") || "";
-        setApiKey(gemini || (legacy.indexOf("AIza") === 0 ? legacy : ""));
+        setApiKey(raw || (legacy.indexOf("AIza") === 0 ? legacy : ""));
       } catch (e) {}
       setState(core); setJournal(jr);
     })();
@@ -2374,7 +2451,7 @@ function Mock({ apiKey, setTab, state, persist, dayNum, focus }) {
   const [offI, setOffI] = useState(0);
   const [offShown, setOffShown] = useState(false);
   const [offMarks, setOffMarks] = useState([]);
-  const hasLive = !!apiKey || proxyState === "yes" || proxyState === "unknown";
+  const hasLive = parseGeminiKeys(apiKey).length > 0 || proxyState === "yes" || proxyState === "unknown";
 
   const needKey = () => setTab("settings");
 
@@ -3020,10 +3097,11 @@ function Learn({ state, persist, focus }) {
 function SettingsView({ apiKey, setApiKey, state, journal, persistCore, persistJournal }) {
   const [draft, setDraft] = useState(apiKey);
   const [saved, setSaved] = useState(false);
+  const keyCount = parseGeminiKeys(draft).length;
 
   const save = () => {
     const v = draft.trim();
-    localStorage.setItem("prep-gemini-key", v);
+    saveGeminiKeysRaw(v);
     setApiKey(v);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -3075,15 +3153,16 @@ function SettingsView({ apiKey, setApiKey, state, journal, persistCore, persistJ
       </section>
 
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-5">
-        <h3 className="text-sm font-semibold text-slate-100 mb-2">Gemini API key (free)</h3>
+        <h3 className="text-sm font-semibold text-slate-100 mb-2">Gemini API keys (free)</h3>
         <p className="text-xs text-slate-400 leading-relaxed mb-3">
-          For live interviewer, topic coach, and communication coach. Get a free key at
-          aistudio.google.com/apikey — Flash-Lite is enough for a few mocks a day.
-          On shared hosting, put the key in config.php instead and upload chat.php so the key never sits in the browser.
+          One key per line (different Google accounts). When one hits the free limit, the next is tried automatically.
+          Get keys at aistudio.google.com/apikey. On shared hosting, put them in config.php as gemini_keys instead.
         </p>
-        <div className="flex gap-2">
-          <input type="password" value={draft} onChange={e => setDraft(e.target.value)} placeholder="AIza..."
-            className="flex-1 bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-700" />
+        <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={4}
+          placeholder={"AIza...account-one\nAIza...account-two\nAIza...account-three"}
+          className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-700" />
+        <div className="flex items-center justify-between gap-2 mt-2">
+          <span className="text-xs text-slate-600">{keyCount ? keyCount + " key(s) — rotates on limit" : "No keys saved yet"}</span>
           <button onClick={save} className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-medium rounded transition-colors">
             {saved ? "Saved" : "Save"}
           </button>

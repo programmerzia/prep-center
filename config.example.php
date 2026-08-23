@@ -2,13 +2,22 @@
 
 /**
  * Copy to config.php on the host (same folder as index.html).
- * Get a free key: https://aistudio.google.com/apikey
+ * Get free keys: https://aistudio.google.com/apikey
  *
- * Gemini Flash-Lite free tier is enough for personal mocks
- * (~a few dozen short chats/day). Groq is an optional backup.
+ * Use gemini_keys for rotation — when one account hits the free limit,
+ * chat.php tries the next key automatically.
  */
 return [
-    'gemini_key' => '',
+    // Single key (still works):
+    // 'gemini_key' => 'AIza...',
+
+    // Multiple keys — one per Google account (recommended):
+    'gemini_keys' => [
+        'AIza...account-one',
+        'AIza...account-two',
+        'AIza...account-three',
+    ],
+
     'gemini_models' => [
         'gemini-3.5-flash-lite',
         'gemini-3.1-flash-lite',
