@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interview Q&amp;A — from your CV</title>
+<style>
+:root{--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--acc:#1f3864;--gold:#b45309;--good:#065f46;--bg:#f8fafc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--acc);color:#fff;padding:28px 20px}
+header .wrap{max-width:860px;margin:0 auto}
+header h1{margin:0 0 6px;font-size:23px;letter-spacing:.2px}
+header p{margin:0;opacity:.85;font-size:14px}
+nav{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;z-index:5;
+ overflow-x:auto;white-space:nowrap}
+nav .wrap{max-width:860px;margin:0 auto}
+nav a{color:var(--mut);text-decoration:none;font-size:13px;margin-right:16px;font-weight:500}
+nav a:hover{color:var(--acc)}
+main{max-width:860px;margin:0 auto;padding:22px 20px 70px}
+section{margin:0 0 34px}
+section h2{font-size:18px;color:var(--acc);margin:26px 0 4px;padding-bottom:6px;border-bottom:2px solid var(--acc)}
+.blurb{color:var(--mut);font-size:14px;margin:0 0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:16px 18px;margin-bottom:13px}
+.cvline{font:600 10.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold);
+ letter-spacing:.7px;text-transform:uppercase;margin-bottom:7px}
+.card h3{font-size:16.5px;margin:0 0 9px;line-height:1.45}
+.num{display:inline-block;min-width:26px;color:var(--mut);font:600 13px ui-monospace,monospace}
+.lbl{display:block;font:600 10px/1.4 ui-monospace,monospace;letter-spacing:.8px;
+ text-transform:uppercase;color:var(--mut);margin-bottom:3px}
+.why{font-size:14px;color:#475569;margin:0 0 11px}
+details{border-top:1px dashed var(--line);padding-top:10px}
+summary{cursor:pointer;font-size:13.5px;color:var(--acc);font-weight:600;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:before{content:"▸ ";}
+details[open] summary:before{content:"▾ ";}
+.ans{margin:11px 0;padding:13px 15px;background:#f0fdf4;border-left:3px solid var(--good);
+ border-radius:0 6px 6px 0;font-size:15px}
+.fu{margin:11px 0}
+.fu ul{margin:0;padding-left:19px}
+.fu li{font-size:14px;color:#475569;margin-bottom:3px}
+.trap{margin-top:11px;padding:11px 14px;background:#fef3c7;border-left:3px solid var(--gold);
+ border-radius:0 6px 6px 0;font-size:14px}
+.tools{max-width:860px;margin:0 auto;padding:14px 20px 0;display:flex;gap:9px;flex-wrap:wrap}
+button{font:600 13px ui-sans-serif,system-ui;padding:8px 14px;border-radius:6px;border:1px solid var(--line);
+ background:#fff;color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--acc);color:var(--acc)}
+footer{max-width:860px;margin:0 auto;padding:0 20px 50px;color:var(--mut);font-size:13px}
+@media print{
+ nav,.tools{display:none} body{background:#fff;font-size:11pt}
+ details{display:block} details>div,.fu{display:block!important}
+ summary{display:none} .card{break-inside:avoid;page-break-inside:avoid}
+ header{background:#fff;color:var(--acc);border-bottom:2px solid var(--acc);padding:0 0 10px}
+}
+</style></head><body>
+<header><div class="wrap">
+<h1>Interview Q&amp;A — built from your CV</h1>
+<p>27 questions your own resume lines invite · Md. Ziaur Rahman</p>
+</div></header>
+<nav><div class="wrap"><a href="#s0">Opening &amp; screening</a><a href="#s1">Osilion — the AI recruitment platform</a><a href="#s2">Osilion — lead generation, infrastructure</a><a href="#s3">DevVoyage &amp; L2N — the PHP years</a><a href="#s4">CoreBari — the side product</a><a href="#s5">The danger zone</a><a href="#s6">Questions you ask them</a></div></nav>
+<div class="tools">
+  <button onclick="document.querySelectorAll('details').forEach(d=>d.open=true)">Reveal all</button>
+  <button onclick="document.querySelectorAll('details').forEach(d=>d.open=false)">Hide all</button>
+  <button onclick="window.print()">Print / Save as PDF</button>
+</div>
+<main>
+<section><p class="blurb"><strong>How to use this.</strong> Every question here is triggered by a specific line
+on your resume — the line is printed above each one. Read the question, say your answer out loud before revealing
+the model answer, then compare. The model answers are shapes to speak in your own words, never scripts to recite.
+Work through one section a day.</p></section>
+<section id="s0"><h2>Opening &amp; screening</h2><p class="blurb">These come first in almost every interview, before anything technical. Get them boringly smooth.</p>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Summary — &#x27;10 years… clients in Europe and Bangladesh&#x27;</div>
+  <h3><span class="num">01</span>Tell me about yourself.</h3>
+  <p class="why"><span class="lbl">Why they ask</span>They are checking whether you can be concise and whether your story has a shape. Rambling here damages everything after it.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">I&#x27;m a full-stack engineer with ten years building production software — booking platforms, marketplaces, CRMs, and SaaS products. Most of my career has been PHP: Laravel and Symfony with Vue on the frontend, largely for international clients. For the past year I&#x27;ve been on remote contract with a Norwegian startup, where I owned an AI recruitment platform end to end — C# and ASP.NET Core on the backend, React and Next.js on the front, running on Azure — and shipped a lead-generation platform alongside it. I also build a small SaaS product of my own, which keeps me hands-on with multi-tenancy, offline sync and payments. I&#x27;m looking for a senior full-stack role where I own features end to end.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What are you looking for in your next role?</li><li>Why this company?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Do not exceed 90 seconds and do not start at university. Start at &#x27;I&#x27;m a full-stack engineer with ten years&#x27;.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Osilion — &#x27;Sep 2025 – Sep 2026&#x27; (contract)</div>
+  <h3><span class="num">02</span>Why is the contract ending? Why are you leaving?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>They are looking for a red flag — performance problems or a difficult exit. Your job is to close it calmly in two sentences.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">It was a fixed-term contract with a startup. Their business situation changed and they couldn&#x27;t sustain the development arrangement, so the contract ended as scheduled at the end of September. Both founders have offered to act as references.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>Would you have stayed if they could have kept you?</li><li>How did you find the contract arrangement?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Then stop talking. No bitterness, no long backstory, no criticism of the company. Offering references immediately converts this into a positive.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Location line — &#x27;Bangladesh (Remote)&#x27;</div>
+  <h3><span class="num">03</span>How do you handle the timezone difference?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>This is the single biggest hesitation for a European employer hiring from Bangladesh. Answer it with evidence, not reassurance.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">I&#x27;ve been doing exactly this for the past year with a Norwegian client, so it&#x27;s a known quantity rather than a plan. Bangladesh is four to five hours ahead of Central Europe, which gives me a solid overlap through your morning and into the early afternoon. I work written-first — decisions in writing, status updates before anyone has to ask, and questions posted with enough context that the answer can come while I&#x27;m asleep and still be useful. I flag blockers within hours rather than sitting on them.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What hours can you commit to?</li><li>How did you handle urgent issues at Osilion?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Never say &#x27;I&#x27;m flexible, I can work any hours&#x27;. It sounds desperate and it isn&#x27;t sustainable. State a real overlap window and hold it.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Whole CV — the AI question</div>
+  <h3><span class="num">04</span>How do you use AI in your development work?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>Now asked in most interviews. They want to know whether you understand what you ship. Your honest answer is a strength if framed correctly.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">I use it as an accelerator, not a substitute for understanding. I design the architecture and the data model myself, then use AI to move faster on implementation — and I review everything that goes in, because I have to debug it at 2am and defend it in code review. On my own product I wrote the platform standards and the sync design first, then built against them. Where I don&#x27;t let it near anything is security boundaries and data modelling; those I do by hand.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>How much of your code is AI-written?</li><li>Show me something you had to rewrite because AI got it wrong.</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Never use the phrase &#x27;vibe coded&#x27;. Never say &#x27;AI wrote it&#x27;. The frame is always: I own the design, AI accelerates the typing.</div>
+  </details>
+</article></section><section id="s1"><h2>Osilion — the AI recruitment platform</h2><p class="blurb">Your most recent and most probed work. Expect 15+ minutes here.</p>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;Owned the AI recruitment product end to end&#x27;</div>
+  <h3><span class="num">05</span>Walk me through that platform — architecture, not features.</h3>
+  <p class="why"><span class="lbl">Why they ask</span>The core system-design question of your interview. They want to see whether you were the owner or a passenger.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">The product automates early-stage recruitment. A recruiter posts a job, candidates apply and upload CVs, the system parses and stores them, an AI conducts a structured first interview, and the platform scores and returns feedback. Architecturally it&#x27;s a React/Next.js frontend against an ASP.NET Core Web API, with EF Core over Azure SQL, and background workers for the slow work — CV parsing and AI calls, which take seconds and can&#x27;t block a request. The backend is layered: domain rules in the centre, application services orchestrating use cases, infrastructure holding EF Core and the external API clients, and the Web API on the outside. Secrets live in Azure Key Vault and deployment runs through GitHub Actions.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>Draw the data model.</li><li>Where would this break first under load?</li><li>What would you change if you rebuilt it?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Have a diagram ready on paper. If you only describe features, you sound like a user of the system rather than its architect.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;AI-conducted interviews, scoring, and feedback&#x27;</div>
+  <h3><span class="num">06</span>How did you make an unreliable model behave predictably in production?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>This separates people who called an API from people who engineered around one. It is your strongest differentiator in 2026.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">The hard part wasn&#x27;t calling the model — it was making a non-deterministic component safe inside a transactional system. Three things mattered. First, structured output: I asked for JSON against a defined schema and validated it on the way back, rather than parsing prose with regex; if validation failed the job retried and eventually flagged for human review instead of writing a bad score. Second, everything ran as a background job, because model calls take seconds and fail intermittently — so retries with backoff, and the job written to be safe to run twice. Third, grounding: scoring was against a defined rubric with the candidate&#x27;s actual answers in context, not a free-form &#x27;rate this person&#x27;, which reduced drift between runs.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>How did you evaluate whether a prompt change made things better?</li><li>What did you do about hallucinated content?</li><li>How did you control cost?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Don&#x27;t overclaim on evaluation rigour. If you didn&#x27;t have a formal eval set, say what you did do — spot-checking against known cases is a legitimate answer.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;CV processing&#x27;</div>
+  <h3><span class="num">07</span>How did CV processing actually work?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>A concrete pipeline question. They want detail, not a summary.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">Upload goes to cloud storage, then a background job picks it up: extract text, normalise it, and pull structured fields — contact details, experience, skills — via the model against a schema. The parsed result is stored alongside the raw file so we never lose the original, and so a parsing improvement can be re-run over history. Failures are the interesting part: image-only PDFs, unusual layouts, multi-column CVs that extract in the wrong reading order. Those get flagged rather than silently stored wrong.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What formats gave you trouble?</li><li>How did you handle a CV that failed to parse?</li><li>Any privacy considerations with CV data?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Expect a follow-up on personal data. Have a sentence ready about storing only what&#x27;s needed and controlling access to candidate records.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;Structured the backend in layers… Repository and Specification patterns&#x27;</div>
+  <h3><span class="num">08</span>Why Specification? Wasn&#x27;t that over-engineering?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>A direct challenge to a named pattern. They&#x27;re testing whether you chose it or copied it.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">It earned its place because candidate filtering was combined in many different ways across use cases — status, role, score threshold, date applied, interview stage — and those combinations kept changing. Without specifications the repository grows twenty near-identical methods that can&#x27;t be tested independently. With them, each rule is an object I can compose and unit test on its own. I wouldn&#x27;t reach for it in a simple CRUD app; there the indirection would cost more than it returns.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>When would you not use Repository at all?</li><li>Did the layering ever slow you down?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Never defend a pattern on principle. Defend it on the specific problem it solved, and be willing to say where you wouldn&#x27;t use it.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;One of four products delivered in twelve months on a small engineering team&#x27;</div>
+  <h3><span class="num">09</span>Four products in a year? How deep was your involvement in each?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>A fair challenge. Vagueness here reads as inflation.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">Two I owned end to end — the AI recruitment platform and the lead-generation platform. On the sales CRM I contributed backend features rather than owning the product, and on a 3D container-design tool my involvement was smaller still. It was a small team shipping multiple products for one client, so scope per product was tighter than it would be at a larger company. I&#x27;d rather be precise about that than claim four products end to end.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>Which one are you proudest of?</li><li>How did you manage context switching?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Do not let this sound like four full products were yours. The honest split is more impressive than the inflated version, and it survives a reference check.</div>
+  </details>
+</article></section><section id="s2"><h2>Osilion — lead generation, infrastructure</h2><p class="blurb">Fewer questions, but they go straight to engineering judgement.</p>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;sending ran off the request cycle in jobs that were safe to retry&#x27;</div>
+  <h3><span class="num">10</span>What does &#x27;safe to retry&#x27; mean concretely? How did you make it idempotent?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>You put idempotency on your CV. They will check that you understand it rather than having heard the word.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">A worker can die after doing the work but before acknowledging it, so any job can run twice — that&#x27;s normal, not exceptional. For email sending, the risk is emailing the same lead twice. So each send is keyed: before sending I check whether that lead-campaign pair has already been marked sent, and I record the send in the same transaction as the state change. Where possible I set a value rather than incrementing one, so a repeat is a no-op rather than a double count. The provider&#x27;s own retry behaviour matters too, which is why the job returns fast and doesn&#x27;t hold the request.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What if the email provider succeeds but your database write fails?</li><li>How did you handle bounces?</li><li>What&#x27;s a dead-letter queue for?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>This is your best chance to sound genuinely senior. Rehearse it until it&#x27;s fluent — it also transfers directly to any payments question.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;deployed on Azure (Azure SQL, Key Vault) and Render with GitHub Actions&#x27;</div>
+  <h3><span class="num">11</span>Walk me through your deployment pipeline. How do you deploy safely?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>Checking that you&#x27;ve operated software, not just written it.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">The pipeline runs on push: install dependencies, run tests, then deploy on main. Secrets never live in the repo — they&#x27;re in GitHub secrets and Azure Key Vault, pulled at runtime. On deploy order, the rule I follow is migrations first and only backward-compatible ones, so old code never meets a schema it doesn&#x27;t understand; then the code; then cache and config; then restart background workers, because they hold the old code in memory until you do. Rollback is redeploying the previous build.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>How do you do a zero-downtime column rename?</li><li>What&#x27;s your rollback plan if a migration breaks?</li><li>How do you know a deploy succeeded?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>The queue-worker restart detail is a strong signal — don&#x27;t skip it. The expand/contract migration pattern is the expected answer to the follow-up.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Skills — &#x27;JWT&#x27;</div>
+  <h3><span class="num">12</span>How did you handle authentication? Why JWT?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>Auth questions are near-universal, and JWT invites a revocation follow-up.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">The API used JWT with short-lived access tokens. The honest trade-off with JWT is that you can&#x27;t un-issue a token, so revocation is the hard part — which is why the access token expiry is short and the refresh path is what you actually control. The signing secret lived in Key Vault rather than configuration. On the client side, tokens go in httpOnly cookies rather than localStorage, because localStorage is readable by any XSS.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>How would you revoke a compromised token immediately?</li><li>Sanctum vs JWT — when would you pick each?</li><li>What&#x27;s in a JWT payload?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Never say a JWT is encrypted. The payload is base64, readable by anyone — say so before they catch it.</div>
+  </details>
+</article></section><section id="s3"><h2>DevVoyage &amp; L2N — the PHP years</h2><p class="blurb">The core of the PHP/Laravel CV, and where a Laravel employer will spend most of their time.</p>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;booking flows covering availability, pricing, reservation, and checkout&#x27;</div>
+  <h3><span class="num">13</span>How did you prevent double bookings?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>The classic domain question for anyone with booking systems on their CV. There is no way to bluff it.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">Concurrency on the slot is the whole problem — two requests can both read &#x27;available&#x27; before either writes. Three ways to handle it. Pessimistic locking: SELECT … FOR UPDATE on the slot row inside a transaction, so the second request blocks until the first commits. A unique constraint on the resource-and-slot pair, so the database itself rejects the duplicate. Or optimistic locking with a version column and a retry on conflict. I lean on the database constraint wherever the model allows it, because it still holds even if a future developer forgets the application logic.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What happens when the payment succeeds but the slot was taken?</li><li>How do you handle holds that expire?</li><li>What isolation level were you running?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Don&#x27;t answer only &#x27;I used a transaction&#x27;. A transaction alone does not prevent this — the lock or the constraint does.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;integrated payment gateways… for booking and checkout&#x27;</div>
+  <h3><span class="num">14</span>Walk me through a payment integration. What goes wrong?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>They want to know whether you&#x27;ve handled money in production or just called an SDK.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">The flow is: create the order in a pending state, hand off to the gateway, then confirm from a verified server-side signal — never from the client redirect, because the user can close the tab or the redirect can be forged. So the webhook is the source of truth: verify the signature first, then deduplicate on the provider&#x27;s event ID because they retry aggressively, then process and return 2xx quickly with heavy work queued. Money is stored as integer minor units or decimal, never float. And the order stores the price at the time of purchase, because prices change and historical orders must not.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What if the webhook arrives before your redirect handler?</li><li>How do you reconcile with the provider?</li><li>How do you handle partial refunds?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>&#x27;Never trust the client redirect for payment confirmation&#x27; is the sentence that proves you&#x27;ve shipped payments. Say it explicitly.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;Tuned MySQL schemas and queries against production booking data&#x27;</div>
+  <h3><span class="num">15</span>Give me a specific query you optimised and how.</h3>
+  <p class="why"><span class="lbl">Why they ask</span>A specific claim invites a specific example. A generic answer here undermines the bullet.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">The recurring pattern was availability and booking listings that filtered on several columns and sorted by date. Two things dominated. First, N+1 — a listing looping over bookings and lazily loading customer or property on each, which I&#x27;d find in the query log or with Debugbar and fix by eager loading. Second, missing or wrongly ordered composite indexes: an index has to match the filter order, so an index on the tenant or property column first, then status, then date, with the range condition last. I&#x27;d confirm with EXPLAIN that it wasn&#x27;t doing a full scan or a filesort rather than assuming.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What does EXPLAIN tell you?</li><li>When does an index not help?</li><li>Why does OFFSET pagination get slow?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Have EXPLAIN vocabulary ready — full table scan, filesort, rows examined. If you can&#x27;t read a plan aloud, this bullet becomes a liability.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;Refactored legacy PHP into maintainable Laravel and Symfony code&#x27;</div>
+  <h3><span class="num">16</span>How do you safely refactor code with no tests?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>Most companies are hiring you for existing code. This question is really about risk judgement.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">You don&#x27;t refactor code you can&#x27;t verify, so the first step is characterisation tests — tests that capture the current behaviour, bugs included, so you know the moment you change it. Then small steps, always green, and never changing behaviour and structure in the same commit. For anything large I prefer the strangler approach: build the new path alongside the old, route part of the traffic to it, expand, then delete the old one — rather than a big-bang rewrite that leaves the system broken for weeks.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>How do you decide what&#x27;s worth refactoring?</li><li>How do you sell a refactor to a manager?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>For the manager follow-up, translate into delivery cost: &#x27;this coupling means a pricing change takes three days instead of three hours&#x27;. Saying &#x27;the code is ugly&#x27; loses the argument.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — L2N — &#x27;Five-year tenure&#x27;</div>
+  <h3><span class="num">17</span>Five years in one place — what changed for you over that time?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>They&#x27;re probing for growth versus stagnation.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">I came in doing feature work and left owning delivery on client systems end to end — schema, APIs, frontend, deployment — and mentoring juniors through code review. The technical shift was from writing whatever worked to caring about what happens after handover: how it&#x27;s tested, how it&#x27;s deployed, how the next person reads it. It&#x27;s also where most of my legacy modernisation experience comes from, because we were maintaining systems we&#x27;d inherited.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>Why did you leave?</li><li>What would you have done differently?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Five years is a strength — stability is rare. Don&#x27;t be apologetic about it.</div>
+  </details>
+</article></section><section id="s4"><h2>CoreBari — the side product</h2><p class="blurb">Impressive technically, but you must control how it&#x27;s framed.</p>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;CoreBari — independent SaaS product, live in production&#x27;</div>
+  <h3><span class="num">18</span>Tell me about CoreBari. Is it a business? Will it distract you?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>The concern is divided attention and flight risk. Answer the technical part with enthusiasm and the commitment part briefly and calmly.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">It&#x27;s a SaaS product I built for small businesses — point of sale, diagnostics lab, attendance and payroll, invoicing — sharing one identity layer so a customer created in one app is visible in another. It mostly runs itself day to day. For me it&#x27;s where I stay hands-on with the harder problems: multi-tenancy, offline-first sync, payment integration. My priority is a stable long-term role, and honestly the product work makes me a better engineer for it.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>How much time does it take?</li><li>What happens if it grows?</li><li>Do you have customers?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Never use the words founder, owner, or &#x27;I run a company&#x27;. &#x27;A product I built&#x27; is accurate and carries none of the risk.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;offline-first PWA synchronisation&#x27;</div>
+  <h3><span class="num">19</span>How does the offline sync work? How do you resolve conflicts?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>The most technically impressive thing on your CV, and very few candidates can discuss it. Expect them to dig.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">The requirement is that a shop keeps selling when the internet drops, so the device has to be authoritative during an outage. Writes go to local storage immediately and queue in an outbox, so the UI never blocks on the network. A background process drains the outbox when connectivity returns and the server responds with authoritative state. Every operation carries a client-generated ID so a replayed sync doesn&#x27;t duplicate a sale. On conflicts — the best answer is to model them away: a sale is append-only, so two devices creating sales don&#x27;t actually conflict, they both happened. Where genuine divergence is possible I go server-authoritative per field. And device clocks lie, sometimes by hours, so anything authoritative uses server time rather than the device&#x27;s.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What happens if the same device syncs twice?</li><li>How do you migrate the local schema?</li><li>What if a sync partially fails?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Practise this until it&#x27;s six confident minutes with a drawing. It&#x27;s the single strongest technical story you own.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;sharing one identity layer with single sign-on across apps&#x27;</div>
+  <h3><span class="num">20</span>How does SSO across your apps work?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>A natural follow-up, and multi-tenancy questions usually come with it.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">One identity service issues the session, and each app trusts it rather than holding its own users, so a user signs in once and moves between apps. Entitlements are separate from identity — which apps a tenant has access to comes from their subscription, checked per request. On tenancy, every record is scoped to a tenant and scoping is the default rather than something you opt into, because the top risk in a system like this is one forgotten filter leaking another business&#x27;s data.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>How do you guarantee no cross-tenant leakage?</li><li>What are the multi-tenancy options and why did you pick yours?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Be ready to name the four tenancy models — shared table with tenant ID, row-level security, schema per tenant, database per tenant — and the trade-off you accepted.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — &#x27;mobile-wallet payment integrations&#x27;</div>
+  <h3><span class="num">21</span>What payment providers have you integrated?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>Straightforward, but this is where you convert local experience into transferable skill.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">Mobile wallet providers in the Bangladesh market for CoreBari, and card gateways for the travel and e-commerce work at DevVoyage. The providers differ, but the engineering is the same everywhere: verify webhook signatures, deduplicate on the provider&#x27;s event ID because they retry, never confirm from a client redirect, store money as minor units, and reconcile against the provider&#x27;s records because the two will diverge eventually.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>Have you worked with Stripe?</li><li>How would you approach an unfamiliar provider?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>If they ask about Stripe specifically and you haven&#x27;t used it, say so — then describe the pattern above. The pattern is what transfers.</div>
+  </details>
+</article></section><section id="s5"><h2>The danger zone</h2><p class="blurb">Your genuine weak points. Prepared honest answers beat improvised defensive ones.</p>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Skills — &#x27;Additionally: C#, ASP.NET Core, EF Core, Azure&#x27;</div>
+  <h3><span class="num">22</span>How strong is your .NET really? It&#x27;s only been a year.</h3>
+  <p class="why"><span class="lbl">Why they ask</span>They can read the dates. Answering this honestly and confidently is worth more than any exaggeration.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">One year, but a year of production ownership rather than tutorials — I architected and shipped the recruitment platform&#x27;s backend on it. What transferred instantly was the architecture: dependency injection, middleware, ORM behaviour, migrations, API design are the same problems I&#x27;d been solving in Laravel for years, just different syntax. What I had to learn specifically was LINQ and deferred execution, async/await properly, EF Core&#x27;s change tracking, and Azure. I&#x27;d describe myself as solidly productive in .NET rather than an expert in its internals — my deepest ecosystem is still PHP.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What&#x27;s deferred execution?</li><li>Explain DI lifetimes.</li><li>AsNoTracking — what and why?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Do not inflate here. .NET interviewers probe internals within two questions, and an exposed bluff costs more than the honest boundary.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Skills — &#x27;PHP 8.x, Laravel, Symfony&#x27; with a year on .NET</div>
+  <h3><span class="num">23</span>You haven&#x27;t written Laravel for a year. Is it still current?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>A fair and likely question. Pre-empting it is better than being caught by it.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">Eight years of it, and the past year on .NET didn&#x27;t erase it — if anything the architectural work sharpened how I think about the service container and layering. I&#x27;ve been actively back in it: rebuilding APIs with Sanctum, policies, queues and Pest tests to make sure I&#x27;m current on PHP 8 features like enums and readonly, and on what&#x27;s changed in recent Laravel versions.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>What&#x27;s new in PHP 8 that you actually use?</li><li>What changed in the recent Laravel versions?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>You must be able to name enums, readonly, match, and constructor promotion instantly. If you can&#x27;t, do that lesson before this interview.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Whole CV — no metrics anywhere</div>
+  <h3><span class="num">24</span>Can you quantify any of this? What was the impact?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>Some interviewers push for numbers. You removed unverifiable ones deliberately — say so.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">I&#x27;m careful with numbers I can&#x27;t stand behind, so I&#x27;d rather give you the concrete scope. On the recruitment platform, the whole first-stage interview process — posting, intake, CV parsing, interview, scoring — ran through the system rather than a recruiter&#x27;s inbox. The booking platforms replaced manual booking and customer management entirely and ran on real production traffic. Where I don&#x27;t have a measured figure I&#x27;d rather describe what changed than invent a percentage.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>Weren&#x27;t you tracking anything?</li><li>How did you know it was working?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>This answer scores well with good interviewers. Never invent a number under pressure — a fabricated metric that unravels is fatal.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Header — &#x27;Senior&#x27;</div>
+  <h3><span class="num">25</span>What makes you senior rather than mid-level?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>They&#x27;re testing self-awareness. Listing years is the weak answer.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">Owning outcomes rather than tickets. I take a vague requirement to a shipped, deployed, maintainable feature — data model, API, interface, tests, deployment — and I make the trade-off calls along the way and explain them. It also means knowing what not to build: I&#x27;ve argued against architecture that would have been fun and wrong for the team&#x27;s size. And it means the code I leave behind is something the next person can work in, which is most of what mentoring at DevVoyage and L2N was about.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>Tell me about a trade-off you got wrong.</li><li>How do you mentor?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Have a real example of an architectural decision you argued against. &#x27;I do what I&#x27;m told well&#x27; is a mid-level answer.</div>
+  </details>
+</article>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — Contract ending September</div>
+  <h3><span class="num">26</span>When can you start? What are your salary expectations?</h3>
+  <p class="why"><span class="lbl">Why they ask</span>Practical screening. Hesitation here reads as uncertainty.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">I&#x27;m available from the start of October, so effectively immediately. On compensation, I&#x27;d like to understand the scope and level first — what range is budgeted for the role? [If pressed] Based on the market for a senior full-stack role at this level I&#x27;m looking at [your range], and I&#x27;m flexible for the right fit.</div>
+    <div class="fu"><span class="lbl">Follow-ups to expect</span><ul><li>Are you interviewing elsewhere?</li><li>Contract or permanent preference?</li></ul></div>
+    <div class="trap"><span class="lbl">Trap</span>Decide your target, minimum and walk-away numbers before the first call. Never accept an offer on the call — ask for a day.</div>
+  </details>
+</article></section><section id="s6"><h2>Questions you ask them</h2><p class="blurb">Never say &#x27;no, I&#x27;m good&#x27;. Pick three; the last two are the ones that matter most for a remote contract-to-permanent move.</p>
+<article class="card">
+  <div class="cvline">FROM YOUR CV — —</div>
+  <h3><span class="num">27</span>Your questions for the interviewer</h3>
+  <p class="why"><span class="lbl">Why they ask</span>This is assessed. Good questions signal seniority and genuine interest.</p>
+  <details>
+    <summary>Say your answer out loud first — then reveal</summary>
+    <div class="ans">How is the team structured, and how do technical decisions actually get made?<br><br>What does the codebase look like today — where&#x27;s the biggest source of technical debt?<br><br>What would success in this role look like in the first 90 days?<br><br>How does the team handle async work across timezones?<br><br>Why is this role open?<br><br>What does the deployment and on-call setup look like?</div>
+    
+    <div class="trap"><span class="lbl">Trap</span>Never open with salary, holidays, or working hours. Those come after they want you.</div>
+  </details>
+</article></section>
+</main>
+<footer>Answers are grounded in your actual experience. If any answer describes something you would not do or did not
+do, change it — an answer you cannot defend is worse than no answer.</footer>
+</body></html>

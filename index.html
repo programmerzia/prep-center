@@ -358,6 +358,13 @@ const RESUME_ROUTES = [
     rule: "Weaker than the targeted PDFs on a pure Laravel or pure React JD. Use when they asked for 'full-stack, any modern stack'." },
 ];
 
+const INTERVIEW_QA = {
+  html: "qa_resume/Ziaur_Interview_QA.html",
+  pdf: "qa_resume/Ziaur_Interview_QA.pdf",
+  label: "Interview Q&A — from your CV",
+  blurb: "Every claim on the CV, with a spoken answer and follow-ups. Practice here before Own it and Mock.",
+};
+
 /* 2026 senior full-stack loop — synthesized from recruiter debriefs (KORE1, May 2026)
    and common remote loops. Not a guess: 4–7 rounds is normal; they added rounds
    because people were strong on one side of the stack and thin on the other.
@@ -1699,6 +1706,21 @@ function ResumeLinks({ compact }) {
   );
 }
 
+function InterviewQaLinks({ compact }) {
+  return (
+    <div className="border-l-2 border-emerald-700 pl-3">
+      <div className="text-sm text-slate-200">{INTERVIEW_QA.label}</div>
+      {!compact && <p className="text-xs text-slate-400 mt-1 leading-relaxed">{INTERVIEW_QA.blurb}</p>}
+      <div className="flex flex-wrap gap-2 mt-1.5">
+        <a href={INTERVIEW_QA.html} target="_blank" rel="noopener noreferrer"
+          className="text-xs text-emerald-400 hover:text-emerald-300 font-mono">Open Q&A</a>
+        <a href={INTERVIEW_QA.pdf} target="_blank" rel="noopener noreferrer"
+          className="text-xs text-amber-400 hover:text-amber-300 font-mono">PDF</a>
+      </div>
+    </div>
+  );
+}
+
 const DAILY = [
   { k: "code", label: "Coded 45 min with AI off" },
   { k: "explain", label: "Explained a system aloud + recorded" },
@@ -1920,6 +1942,8 @@ function Today({ state, persist, dayNum, todayKey, journal, persistJournal, go }
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-3">
         <h3 className="text-sm font-semibold text-slate-100">Resumes — download & send</h3>
         <ResumeLinks compact />
+        <h3 className="text-sm font-semibold text-slate-100 pt-2">Defend the CV</h3>
+        <InterviewQaLinks compact />
         <button onClick={() => go("scripts")} className="text-xs text-sky-400 hover:text-sky-300">Cover note + scripts →</button>
       </section>
 
@@ -2947,6 +2971,8 @@ function Chase({ go }) {
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-3">
         <h3 className="text-sm font-semibold text-slate-100">Which file to attach</h3>
         <ResumeLinks />
+        <h3 className="text-sm font-semibold text-slate-100 pt-2">Defend every CV line</h3>
+        <InterviewQaLinks />
         <button onClick={() => go("log")}
           className="mt-2 px-3 py-2 bg-amber-500 text-slate-950 text-sm font-medium rounded">
           Log the five you send today
@@ -2980,6 +3006,8 @@ function Scripts() {
       <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-3">
         <h3 className="text-sm font-semibold text-slate-100">Which resume to send</h3>
         <ResumeLinks compact />
+        <h3 className="text-sm font-semibold text-slate-100 pt-1">Interview Q&A (from CV)</h3>
+        <InterviewQaLinks compact />
       </div>
       {SCRIPTS.map((s, i) => (
         <div key={i} className="bg-slate-900 border border-slate-800 rounded-lg p-4">
@@ -3032,6 +3060,9 @@ function OwnIt({ state, persist, journal, persistJournal, focus, go }) {
           <span>{sysDone}/{SYSTEMS.length} systems recorded</span>
           <span>{claimGot}/{CLAIMS.length} claims owned</span>
           <span>{starDone}/{STARS.length} STAR drafts</span>
+        </div>
+        <div className="mt-3 pt-3 border-t border-slate-800">
+          <InterviewQaLinks compact />
         </div>
       </div>
 
