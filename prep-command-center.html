@@ -1406,10 +1406,10 @@ function speakText(text, onDone) {
     u.onend = done;
     u.onerror = done;
     window.speechSynthesis.speak(u);
-    if (!window.speechSynthesis.speaking && window.speechSynthesis.pending) {
-      /* Chrome sometimes fires neither event — fallback */
-      setTimeout(done, Math.min(120000, text.length * 55));
-    }
+    setTimeout(() => {
+      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+      done();
+    }, Math.min(120000, text.length * 55 + 800));
   });
 }
 
